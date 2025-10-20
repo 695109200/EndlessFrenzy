@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import * as THREE from 'three';
 
 // 模型加载路径字典
 export const useHeroModelDict = create((set) => ({
@@ -16,19 +17,32 @@ export const useDefaultSetting = create((set) => ({
     setData: (key, value) => set((state) => ({ [key]: value }))
 }));
 
-// 游戏场景
-export const useGameStore = create((set) => ({
+// 游戏数据
+export const useGameStore = create((set, get) => ({
     container: null,
     scene: null,
     renderer: null,
     camera: null,
     orbitControls: null,
-    clock: null,
+    clock: new THREE.Clock(),
     light: null,
     HeroManage: null,
     MonsterManage: null,
-    ActionManage:null,
+    ActionManage: null,
+    LoopArr: [],
+    FPS: 60,
     floor: null,
     followGroup: null,
-    setData: (key, value) => set((state) => ({ [key]: value }))
+    setData: (key, value) => set((state) => ({ [key]: value })),
+    addLoop: (fn) => set((state) => {
+        // 检查函数是否已存在，不存在才添加
+        if (!state.LoopArr.includes(fn)) {
+            return { LoopArr: [...state.LoopArr, fn] };
+        }
+        return state; // 已存在则不更新
+    })
 }));
+
+if (import.meta.env.DEV) {
+    window.game = useGameStore;
+}

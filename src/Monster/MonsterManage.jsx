@@ -12,14 +12,22 @@ class MonsterManage {
         this.monsterAIs = [];
         this.monsterCache = null;
         this.monsterAnimations = null;
-        this.init()
+        this.loadPromise = new Promise(async (resolve) => {
+            await this.init();
+            resolve();
+        });
     }
 
     async init() {
-        this.loadMonsterModel()
+        await this.loadMonsterModel()
         this.scene.add(this.monsterGroup);
     }
 
+    waitForLoad() {
+        return this.loadPromise;
+    }
+
+    // 加载怪物模型
     loadMonsterModel = async () => {
         const gltf = await loadGLTFModel('/Model/Monster/melee_minion_-_chaos.glb');
         const model = gltf.scene;
@@ -45,6 +53,7 @@ class MonsterManage {
         this.monsterCache = model;
     };
 
+    // 添加怪物
     async addMonsters() {
         const HeroManage = this.getState().HeroManage;
         // 检查缓存是否就绪（模型和动画都需存在）
@@ -84,6 +93,7 @@ class MonsterManage {
         this.monsterAIs.forEach(ai => ai.update(delta));
     }
 
+    // 删除怪物
     removeMonster(monsterAI) {
         const { monster } = monsterAI;
         if (!monster) return;
@@ -109,11 +119,9 @@ class MonsterManage {
         // 5. 手动解除引用，帮助GC回收
         monsterAI.monster = null;
         monsterAI.heroManage = null;
-        monsterAI.monsterManage = null;
-
-        console.log(`怪物已销毁，剩余怪物数量：${this.monsterAIs.length}`);
     }
 
+    // 销毁
     dispose(monster) {
         monster.traverse(child => {
             if (child.isMesh || child.isSkinnedMesh) {

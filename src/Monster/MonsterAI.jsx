@@ -1,4 +1,6 @@
 // 怪物AI控制器（每个怪物一个实例）
+import { useGameStore, useDefaultSetting } from '../Store/StoreManage';
+
 class MonsterAI {
     constructor(monsterMesh, heroManage) {
         this.monster = monsterMesh; // 单个怪物的Mesh/SkinnedMesh
@@ -8,20 +10,24 @@ class MonsterAI {
         this.rotationSpeed = 0.1; // 转向速度
         this.actions = {}
         this.stopDistance = 1.5;
+        this.init()
     }
 
-   
+    init() {
+        useGameStore.getState().addLoop((delta) => {
+            this.update(delta);
+        });
+    }
 
     // 单个怪物的移动逻辑
     update(delta) {
-        if (!this.heroManage?.model) return;
-        
+        if (!this.heroManage?.hero) return;
 
         // 获取自身和英雄的世界坐标
         const monsterPos = new THREE.Vector3();
         const heroPos = new THREE.Vector3();
         this.monster.getWorldPosition(monsterPos);
-        this.heroManage.model.getWorldPosition(heroPos);
+        this.heroManage.hero.getWorldPosition(heroPos);
 
         // 计算方向向量（指向英雄）
         const direction = new THREE.Vector3()

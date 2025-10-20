@@ -1,53 +1,48 @@
 // src/components/SceneElements.jsx
-import { useGameStore, useDefaultSetting, useHeroModelDict } from '../Store/StoreManage';
-import { loadHDRTexture, loadGLTFModel, updateMixer, unwrapRad, checkSphereCollision, createModelWithCollisionProxy } from '../Utils/Utils';
+import { useGameStore, useDefaultSetting } from '../Store/StoreManage';
+import HeroManage from '../Hero/HeroManage';
+import MonsterManage from '../Monster/MonsterManage';
 
 class ActionManage {
     constructor() {
         this.setData = useGameStore.getState().setData
         this.getState = useGameStore.getState
-        this.initGame()
-        this.startLoop();
+        this.init()
+
     }
 
-    initGame() {
+    async init() {
+
+        await this.initGame()
+        useGameStore.getState().addLoop((delta) => {
+            this.update(delta);
+        });
+    }
+
+    initGame = async () => {
+        const { scene, camera, renderer, followGroup, setData } = useGameStore.getState();
+
+        const heroManage = new HeroManage(scene, followGroup, camera, useDefaultSetting.getState().defaultHero);
+        setData('HeroManage', heroManage);
+        await heroManage.waitForLoad();
+
+        const monsterManage = new MonsterManage(scene);
+        setData('MonsterManage', monsterManage);
+        await monsterManage.waitForLoad();
+
         setInterval(() => {
-            this.getState().MonsterManage.addMonsters();
+            monsterManage.addMonsters();
+        }, 500)
+        setInterval(() => {
+            // heroManage.attack()
         }, 1000)
     }
 
-    heroUpdate(delta) {
-        const hero = this.getState().HeroManage
-        updateMixer(hero.mixer, delta)
-        hero.handelMove(delta)
-
-    }
-
-    monsterUpdate(delta) {
-        const monster = this.getState().MonsterManage
-        updateMixer(monster.mixer, delta)  //更新动画
-        monster.moveToHero(delta)  //怪物走向英雄
-    }
-
-
     // 游戏主循环
-    startLoop() {
-        const {
-            scene, renderer, camera, clock,
-            HeroManage, MonsterManage, orbitControls, ActionManage
-        } = useGameStore.getState();
+    update(delta) {
+        const { HeroManage } = useGameStore.getState();
+        HeroManage.attack()
 
-        if (!scene) return;
-
-        // 计算帧间隔时间
-        const delta = clock.getDelta();
-
-        this.monsterUpdate(delta)
-        this.heroUpdate(delta)
-
-        // 渲染场景
-        renderer.render(scene, camera);
-        requestAnimationFrame(() => this.startLoop())
     }
 }
 

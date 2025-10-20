@@ -1,7 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 
-import HeroManage from '../Hero/HeroManage';
-import MonsterManage from '../Monster/MonsterManage';
 import ActionManage from '../Action/ActionManage';
 
 import { createMainCamera } from './Camera';
@@ -9,19 +7,21 @@ import Controls from './Controls';
 import Light from './Light';
 import Floor from './Floor';
 
-import { useGameStore, useDefaultSetting, useHeroModelDict } from '../Store/StoreManage';
-
+import { useGameStore, useDefaultSetting } from '../Store/StoreManage';
 
 class GameScene {
     constructor(container) {
-        // 1. 保存 DOM 容器到全局状态
-        useGameStore.getState().setData('container', container);
+        this.setData = useGameStore.getState().setData
+        this.getState = useGameStore.getState
+        this.container = container
+        this.init()
+    }
 
-        // 2. 初始化核心资源（场景、相机、渲染器等）
+    init = async () => {
+        this.setData('container', this.container);
         this.initCore();
-
-        // 3. 初始化子模块（灯光、角色、地板等）
-
+        this.update()
+        await this.initModules();
     }
 
     // 初始化核心资源（场景、相机、渲染器、时钟等）
@@ -48,48 +48,50 @@ class GameScene {
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
-        setData('renderer', renderer);
 
-        setData('clock', new THREE.Clock());
+        setData('renderer', renderer);
 
         // 跟随组（用于相机/角色跟随）
         const followGroup = new THREE.Group();
         scene.add(followGroup);
         setData('followGroup', followGroup);
 
-        await this.initModules();
-
-        // 5. 监听窗口大小变化
         this.addEventListeners();
     }
 
     // 初始化子模块（灯光、角色、地板等）
-    async initModules() { // 改为 async 函数
+    async initModules() {
         const { scene, camera, renderer, followGroup, setData } = useGameStore.getState();
 
-        // 1. 轨道控制器（无依赖，同步初始化）
         setData('orbitControls', new Controls(camera, renderer.domElement));
 
-        // 2. 灯光（无依赖，同步初始化）
         setData('light', new Light(scene, followGroup));
 
-        // 3. 地板（无依赖，同步初始化）
         setData('floor', new Floor(scene, renderer));
 
-        // 4. 英雄（有模型加载，异步初始化，等待加载完成）
-        console.log(0)
-        const heroManage = new HeroManage(scene, followGroup, camera, useDefaultSetting.getState().defaultHero);
-        setData('HeroManage', heroManage);
-        await heroManage.waitForLoad(); // 关键：等待英雄模型加载完成
-        console.log(4)
-
-        // 5. 怪物（依赖英雄，必须在英雄加载完成后初始化）
-        const monsterManage = new MonsterManage(scene, heroManage); // 此时 heroManage.model 已存在
-        setData('MonsterManage', monsterManage);
-
-        // 6. 动作管理（无依赖，最后初始化）
         setData('ActionManage', new ActionManage());
     }
+
+    update = () => {
+        const { scene, renderer, camera, LoopArr, FPS } = useGameStore.getState();
+        const minFrameInterval = 1000 / FPS;
+
+        if (!this.lastFrameTime) {
+            this.lastFrameTime = performance.now();
+        }
+
+        const currentTime = performance.now();
+        const frameInterval = currentTime - this.lastFrameTime;
+
+        if (frameInterval >= minFrameInterval) {
+            const delta = frameInterval / 1000;
+            renderer.render(scene, camera);
+            LoopArr.forEach(fn => fn(delta));
+            this.lastFrameTime = currentTime;
+        }
+
+        requestAnimationFrame(() => this.update());
+    };
 
     // 事件监听（窗口大小变化）
     addEventListeners() {
@@ -122,11 +124,11 @@ class GameScene {
         if (resizeHandler) window.removeEventListener('resize', resizeHandler);
 
         // 销毁子模块
-        HeroManage?.dispose();
-        MonsterManage?.dispose();
-        light?.dispose();
-        floor?.dispose();
-        orbitControls?.dispose();
+        // HeroManage?.dispose();
+        // MonsterManage?.dispose();
+        // light?.dispose();
+        // floor?.dispose();
+        // orbitControls?.dispose();
 
         // 清理渲染器
         if (container && renderer?.domElement) {

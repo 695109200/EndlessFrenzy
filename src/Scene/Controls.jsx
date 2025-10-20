@@ -1,5 +1,6 @@
 // src/components/Controls.jsx
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { useGameStore, useDefaultSetting } from '../Store/StoreManage';
 
 class Controls {
     constructor(camera, domElement) {
@@ -15,13 +16,14 @@ class Controls {
         this.controls.enableDamping = true;
         this.controls.enablePan = false;
         this.controls.maxPolarAngle = Math.PI / 2 - 0.05;
-        this.controls.update();
+        this.update();
+        useGameStore.getState().addLoop(() => {
+            this.update();
+        });
     }
-
     update() {
-        this.controls.update();
+        this.controls.update(); // 阻尼效果需要每帧调用
     }
-
 }
 
 export default Controls
