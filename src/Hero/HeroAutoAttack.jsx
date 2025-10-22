@@ -1,5 +1,6 @@
 import { useGameStore } from '../Store/StoreManage';
 import HeroBasics from './HeroBasics';
+import Bullet from '../Skill/Bullet'
 import * as THREE from 'three';
 
 class HeroAutoAttack extends HeroBasics {
@@ -33,12 +34,26 @@ class HeroAutoAttack extends HeroBasics {
         // 过滤无效状态
         if (this.state.isMoving || this.state.isRotatingToTarget) return;
         const monsters = this.getState().MonsterManage.monsterGroup.children;
-        if (monsters.length === 0) return;
+        if (monsters.length === 0){
+            this.state.isAttacking = false;
+            this.state.isMoving = false;
+            this.state.key = [0, 0, 0]
+            return;
 
-        // 锁定目标并开始转向
-        this.attackTarget(); // 计算目标旋转角
+        } 
+
+        let nearestMonster = this.findMonster();
+        nearestMonster && this.attackTarget(nearestMonster)
+        new Bullet(
+            this.model, // 角色模型
+            nearestMonster, // 怪物模型
+            this.state.attackSpeed, // 攻击速度（关联子弹飞行速度）
+            (hitInfo) => {
+                console.log(hitInfo)
+                this.getState().MonsterManage.removeMonster(hitInfo.target.monsterAI)
+            }
+        );
         this.state.isRotatingToTarget = true; // 标记转向状态
-        console.log('开始转向目标...');
     }
 
     // 每帧更新转向逻辑（需在主循环中调用）
@@ -116,13 +131,7 @@ class HeroAutoAttack extends HeroBasics {
         this.startAttackLoop();
     }
 
-    // 清理资源
-    destroy() {
-        if (this.state.attackTimer) clearInterval(this.state.attackTimer);
-    }
-
-    // 目标锁定与旋转计算（保持不变）
-    attackTarget = () => {
+    findMonster = () => {
         const monsterArr = this.getState().MonsterManage.monsterGroup.children;
         if (monsterArr.length === 0) return;
 
@@ -137,33 +146,34 @@ class HeroAutoAttack extends HeroBasics {
                 nearestMonster = monster;
             }
         });
+        return nearestMonster
+    }
 
-        if (nearestMonster) {
-            // 计算指向怪物的方向向量（锁定Y轴）
-            const targetDir = new THREE.Vector3()
-                .subVectors(nearestMonster.position, heroPos)
-                .normalize();
-            targetDir.y = 0;
+    attackTarget = (nearestMonster) => {
+        const heroPos = this.model.position;
+        const targetDir = new THREE.Vector3()
+            .subVectors(nearestMonster.position, heroPos)
+            .normalize();
+        targetDir.y = 0;
 
-            // 计算目标旋转四元数
-            const targetQuat = new THREE.Quaternion();
-            targetQuat.setFromUnitVectors(
-                new THREE.Vector3(0, 0, 1), // 模型初始朝前方向（Z轴）
-                targetDir
-            );
-            // 修正最短旋转路径
-            const currentQuat = this.model.quaternion;
-            const dotProduct = currentQuat.dot(targetQuat);
-            if (dotProduct < 0) {
-                targetQuat.x = -targetQuat.x;
-                targetQuat.y = -targetQuat.y;
-                targetQuat.z = -targetQuat.z;
-                targetQuat.w = -targetQuat.w;
-            }
-
-            this.state.targetQuaternion.copy(targetQuat);
+        const targetQuat = new THREE.Quaternion();
+        targetQuat.setFromUnitVectors(
+            new THREE.Vector3(0, 0, 1), 
+            targetDir
+        );
+        // 修正最短旋转路径
+        const currentQuat = this.model.quaternion;
+        const dotProduct = currentQuat.dot(targetQuat);
+        if (dotProduct < 0) {
+            targetQuat.x = -targetQuat.x;
+            targetQuat.y = -targetQuat.y;
+            targetQuat.z = -targetQuat.z;
+            targetQuat.w = -targetQuat.w;
         }
+
+        this.state.targetQuaternion.copy(targetQuat);
     };
+
 }
 
 export default HeroAutoAttack;

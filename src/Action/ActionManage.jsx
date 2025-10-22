@@ -32,8 +32,7 @@ class ActionManage {
 
         setInterval(() => {
             monsterManage.addMonsters();
-            // monsterManage.addMonsters();
-        }, 800)
+        }, 1000)
     }
 
     // 游戏主循环

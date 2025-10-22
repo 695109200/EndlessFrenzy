@@ -80,11 +80,12 @@ class MonsterManage {
 
         // 4. 创建独立 AI（传入带动画的克隆体，后续可控制动画切换）
         const monsterAI = new MonsterAI(monsterMesh, HeroManage);
+        monsterMesh.monsterAI = monsterAI
         this.monsterAIs.push(monsterAI);
 
-        this.lifetimeTimer = setTimeout(() => {
-            this.removeMonster(monsterAI);
-        }, 0.5 * 1000);
+        // this.lifetimeTimer = setTimeout(() => {
+        //     this.removeMonster(monsterAI);
+        // }, 0.5 * 1000);
 
     }
 
