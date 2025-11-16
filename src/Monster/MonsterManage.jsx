@@ -1,4 +1,4 @@
-import { loadGLTFModel } from '../Utils/Utils';
+import { loadGLTFModel, createFixedCollisionBox } from '../Utils/Utils';
 import { useGameStore } from '../Store/StoreManage';
 import MonsterAI from './MonsterAI'
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
@@ -12,6 +12,7 @@ class MonsterManage {
         this.monsterAIs = [];
         this.monsterCache = null;
         this.monsterAnimations = null;
+        this.collisionBoxMesh = null
         this.loadPromise = this.init();
     }
 
@@ -24,6 +25,9 @@ class MonsterManage {
         const gltf = await loadGLTFModel('/Model/Monster/melee_minion_-_chaos.glb');
         const model = gltf.scene;
         model.scale.set(0.01, 0.01, 0.01);
+
+        this.collisionBoxMesh = createFixedCollisionBox(100, 120, 100);
+
         model.traverse((object) => {
             if (object.isMesh || object.isSkinnedMesh) {
                 object.castShadow = true;
@@ -37,7 +41,10 @@ class MonsterManage {
                 }
             }
         });
+        model.add(this.collisionBoxMesh);
+
         this.monsterCache = model;
+
         this.monsterAnimations = gltf.animations;
     };
 

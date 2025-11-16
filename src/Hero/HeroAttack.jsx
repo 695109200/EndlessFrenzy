@@ -150,9 +150,8 @@ class HeroAttack extends HeroBasics {
         if (!this.nearestMonster) return;
         const { SkillManage } = this.getState()
         SkillManage.createBullet(
-            this.model,
             this.nearestMonster,
-            "L1"
+            "normalBullet"
         );
     }
 

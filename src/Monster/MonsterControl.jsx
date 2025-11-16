@@ -20,7 +20,7 @@ class MonsterControl {
         };
         useGameStore.getState().addLoop(this.updateFn);
     }
-    
+
     update(delta) {
         if (!this.heroManage?.hero || !this.monster) return;
 
@@ -36,9 +36,9 @@ class MonsterControl {
         const distance = monsterPos.distanceTo(heroPos);
         this.lookAtHero(direction);
 
-        // if (distance > this.stopDistance) {
-        //     this.moveTowards(direction, delta);
-        // }
+        if (distance > this.stopDistance) {
+            this.moveTowards(direction, delta);
+        }
     }
 
     lookAtHero(direction) {

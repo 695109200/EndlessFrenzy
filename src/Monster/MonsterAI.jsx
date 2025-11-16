@@ -52,7 +52,7 @@ class MonsterAI {
     initCollision() {
         this.collisionManager.register({
             id: this.id,
-            mesh: this.monster,
+            mesh: this.monster.children[2],
             tag: this.tag,
             onCollision: this.handleCollision.bind(this)
         });

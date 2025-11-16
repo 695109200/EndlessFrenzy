@@ -1,5 +1,3 @@
-import * as THREE from 'three';
-
 class HeroBasics {
     static state = {
         currentState: 'Idle',

@@ -1,79 +1,55 @@
 
-import { useGameStore } from '../Store/StoreManage';
-import { useBulletModelDict } from '../Store/StoreManage';
+import { useGameStore, useBulletModelDict } from '../Store/StoreManage';
+import NormalBullet from './NormalBullet';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import Bullet from './Bullet';
 class SkillManage {
     constructor() {
         this.setData = useGameStore.getState().setData
         this.getState = useGameStore.getState
-        this.Bullet_L1_Model = null
-        this.defaultLevel = "L1"
-        this.MODEL_SCALE = 0.3
-        this.loader = new GLTFLoader();
-        this.BULLET_MODEL_PATH = useBulletModelDict.getState()[this.defaultLevel]
-        this.isLoadedPromise = this.init();
+        this.bulletModelCache = {};
+        this.init()
     }
 
     async init() {
-        await this.loadBullet()
+        const bulletPaths = useBulletModelDict.getState();
+        const loader = new GLTFLoader();
+
+        const loadPromises = Object.entries(bulletPaths).map(([type, path]) =>
+            this.loadModel(loader, type, path)
+        );
+
+        await Promise.all(loadPromises);
+        console.log("所有子弹模型加载完成并缓存。");
     }
 
-    async loadBullet() {
-        let bulletLoadPromise = new Promise((resolve, reject) => {
-            this.loader.load(
-                this.BULLET_MODEL_PATH,
+    async loadModel(loader, type, path) {
+        return new Promise((resolve, reject) => {
+            loader.load(
+                path,
                 (gltf) => {
-                    const model = gltf.scene;
-                    this.Bullet_L1_Model = model;
-                    this.Bullet_L1_Model.traverse((child) => {
-                        if (child.isMesh) {
-                            if (Array.isArray(child.material)) {
-                                child.material = child.material.map(m => m.clone());
-                            } else {
-                                child.material = child.material.clone();
-                            }
-                            child.castShadow = true;
-                        }
-                    });
-                    this.Bullet_L1_Model.scale.set(this.MODEL_SCALE, this.MODEL_SCALE, this.MODEL_SCALE);
-                    this.Bullet_L1_Model.visible = false;
-
-                    resolve(this.Bullet_L1_Model);
+                    this.bulletModelCache[type] = gltf.scene;
+                    console.log(this.bulletModelCache)
+                    resolve();
                 },
                 undefined,
                 (error) => {
-                    console.error('Failed to load bullet GLB model:', error);
+                    console.error(`Failed to load bullet model for type ${type}:`, error);
                     reject(error);
                 }
             );
         });
-        return bulletLoadPromise;
     }
 
-    async createBullet(hero, target, level = this.defaultLevel) {
-        if (!this.Bullet_L1_Model) {
-            console.warn(`Bullet model L1 not yet loaded. Waiting...`);
-            await this.isLoadedPromise;
+    createBullet(targetMesh, type = 'normalBullet') {
+        const sourceModel = this.bulletModelCache[type];
+        if (!sourceModel) {
+            console.error(`Bullet type ${type} model not found in cache.`);
+            return;
         }
-        const baseModel = this[`Bullet_${level}_Model`];
-
-        if (!baseModel) {
-            console.error(`Bullet model for level ${level} not found.`);
-            return null;
-        }
-
-        try {
-            const newBulletInstance = new Bullet(
-                hero,
-                target,
-                baseModel.clone() // 传入克隆后的模型
-            );
-            return newBulletInstance;
-        } catch (e) {
-            console.error("Error creating Bullet instance:", e);
-            return null;
-        }
+        const newBulletMesh = sourceModel.clone();
+        const newBulletInstance = new NormalBullet(targetMesh, newBulletMesh);
+        newBulletInstance.create();
+        return newBulletInstance;
     }
 }
 export default SkillManage;

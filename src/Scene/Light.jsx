@@ -1,5 +1,5 @@
 import * as THREE from 'three'; // 确保导入 THREE
-import { loadHDRTexture, updateMixer, unwrapRad } from '../Utils/Utils';
+import { loadHDRTexture } from '../Utils/Utils';
 class Light {
     constructor(scene, followGroup) {
         this.dirLight = null

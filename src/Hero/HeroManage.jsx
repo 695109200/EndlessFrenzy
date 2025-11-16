@@ -1,4 +1,4 @@
-import { loadGLTFModel } from '../Utils/Utils';
+import { loadGLTFModel, createFixedCollisionBox } from '../Utils/Utils';
 import { useGameStore, useHeroModelDict } from '../Store/StoreManage';
 import HeroControl from './HeroControl'
 import HeroAnimate from './HeroAnimate'
@@ -21,6 +21,7 @@ class HeroManage extends HeroBasics {
         this.animations = null
         this.hero = null
         this.healthBar = null
+        this.collisionBoxMesh = null
 
         this.loadModel = useHeroModelDict.getState()[heroName]
         this.loadPromise = this.init();
@@ -42,7 +43,7 @@ class HeroManage extends HeroBasics {
     initCollision() {
         this.collisionManager.register({
             id: this.id,
-            mesh: this.hero,
+            mesh: this.collisionBoxMesh,
             tag: this.tag,
             onCollision: this.handleCollision.bind(this)
         });
@@ -55,6 +56,7 @@ class HeroManage extends HeroBasics {
 
         if (otherObject.tag == 'monster') {
             this.state.health -= 1;
+            this.healthBar.updateHealth(this.state.health)
             this.startInvulnerability();
         }
     }
@@ -72,6 +74,8 @@ class HeroManage extends HeroBasics {
         this.hero = gltf.scene
         this.scene.add(this.hero)
 
+        this.collisionBoxMesh = createFixedCollisionBox(100, 120, 100);
+
         this.hero.traverse((object) => {
             if (object.isMesh) {
                 object.castShadow = true;
@@ -82,6 +86,7 @@ class HeroManage extends HeroBasics {
                 object.material.metalnessMap = object.material.map;
             }
         });
+        this.hero.add(this.collisionBoxMesh);
         this.animations = gltf.animations
     };
 

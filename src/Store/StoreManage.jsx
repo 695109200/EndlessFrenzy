@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 // 子弹模型加载路径字典
 export const useBulletModelDict = create((set) => ({
-    'L1': '/Model/Bullet/bullet.glb'
+    'normalBullet': '/Model/Bullet/bullet.glb'
 }));
 
 
