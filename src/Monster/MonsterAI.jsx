@@ -4,16 +4,18 @@ import * as THREE from 'three';
 import MonsterAnimate from './MonsterAnimate'
 import MonsterControl from './MonsterControl'
 import HealthBar from '../Base/HealthBar'
+import ExperienceBall from '../Base/ExperienceBall'
+
 class MonsterAI {
     constructor(monster) {
         this.setData = useGameStore.getState().setData;
         this.getState = useGameStore.getState;
         this.heroManage = this.getState().HeroManage
         this.collisionManager = this.getState().CollisionManager
-        this.scene = this.getState().MonsterManage.scene;
+        this.scene = this.getState().scene;
 
         this.pixelRatio = window.devicePixelRatio || 1;
-        this.maxHealth = 10;
+        this.maxHealth = 2;
         this.deathExperience = 1;
         this.health = this.maxHealth;
         this.monster = monster;
@@ -63,7 +65,6 @@ class MonsterAI {
         if (otherObject.tag === 'bullet') {
             const damage = this.getState().HeroManage.state.damage
             this.onHit(damage);
-
         }
     }
 
@@ -120,6 +121,7 @@ class MonsterAI {
     }
 
     death() {
+        new ExperienceBall(this.deathExperience, this.monster.position)
         this.getState().MonsterManage.removeMonster(this);
         this.dispose();
     }

@@ -7,6 +7,7 @@ class HeroBasics {
         damage: 1,
         attackSpeed: 3.0,
         experience: 0,
+        experienceScope: 2,
         buff: [],
         debuff: [],
         skill: []

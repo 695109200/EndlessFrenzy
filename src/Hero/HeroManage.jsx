@@ -4,6 +4,7 @@ import HeroControl from './HeroControl'
 import HeroAnimate from './HeroAnimate'
 import HeroAttack from './HeroAttack'
 import HeroBasics from './HeroBasics';
+import HeroExperience from './HeroExperience';
 import HealthBar from '../Base/HealthBar'
 
 class HeroManage extends HeroBasics {
@@ -17,7 +18,9 @@ class HeroManage extends HeroBasics {
         this.followGroup = followGroup
         this.camera = camera
 
+        this.HeroExperience = null
         this.HeroControl = null
+        this.HeroAttack = null
         this.animations = null
         this.hero = null
         this.healthBar = null
@@ -36,6 +39,7 @@ class HeroManage extends HeroBasics {
         this.HeroAnimate = new HeroAnimate(this.hero, this.animations)
         this.HeroControl = new HeroControl(this.hero)
         this.HeroAttack = new HeroAttack(this.hero)
+        this.HeroExperience = new HeroExperience(this.hero)
         this.healthBar = new HealthBar(this.hero, this.state.health, this.scene, 3)
         this.initCollision()
     }
@@ -89,6 +93,19 @@ class HeroManage extends HeroBasics {
         this.hero.add(this.collisionBoxMesh);
         this.animations = gltf.animations
     };
+
+    addBuff() {
+
+    }
+
+    removeBuff() {
+
+    }
+
+    addExperience(experience) {
+        this.state.experience += experience
+        console.log(this.state.experience)
+    }
 
     dispose() {
         this.HeroAnimate.dispose()
