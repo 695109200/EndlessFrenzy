@@ -6,6 +6,7 @@ import HeroAttack from './HeroAttack'
 import HeroBasics from './HeroBasics';
 import HeroExperience from './HeroExperience';
 import HealthBar from '../Base/HealthBar'
+import Txt from '../Base/Txt'
 
 class HeroManage extends HeroBasics {
     constructor(scene, followGroup, camera, heroName) {
@@ -41,6 +42,7 @@ class HeroManage extends HeroBasics {
         this.HeroAttack = new HeroAttack(this.hero)
         this.HeroExperience = new HeroExperience(this.hero, this.scene)
         this.healthBar = new HealthBar(this.hero, this.state.health, 3.3)
+        this.txt = new Txt(this.hero, 3.3)
         this.initCollision()
     }
 
@@ -66,6 +68,7 @@ class HeroManage extends HeroBasics {
 
         if (otherObject.tag == 'monster') {
             this.state.health -= 1;
+            this.txt.showTxt(1, 2.5, '#5d0707ff')
             if (this.state.health <= 0) {
                 this.death()
             }

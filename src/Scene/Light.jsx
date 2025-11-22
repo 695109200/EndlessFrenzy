@@ -9,8 +9,8 @@ class Light {
     }
 
     init() {
-        this.dirLight = new THREE.DirectionalLight(0xffffff, 8);
-        this.dirLight.position.set(-2, 5, -3);
+        this.dirLight = new THREE.DirectionalLight(0xffffff, 14);
+        this.dirLight.position.set(-4, 10, -3);
         this.dirLight.castShadow = true;
 
         const shadowCam = this.dirLight.shadow.camera;
