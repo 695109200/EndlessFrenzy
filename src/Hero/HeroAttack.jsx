@@ -90,7 +90,7 @@ class HeroAttack extends HeroBasics {
     // 查找最近的怪物
     findMonster = () => {
         const monsterArr = this.getState().MonsterManage.monsterGroup.children;
-        if (monsterArr.length === 0) return null;
+        if (monsterArr.length === 0 || !this.state.isAlive) return null;
 
         const heroPos = this.model.position;
         let nearestMonster = null;
@@ -126,7 +126,7 @@ class HeroAttack extends HeroBasics {
 
     // 转向完成后执行攻击
     executeAttackAfterRotation() {
-        if (this.state.currentState === 'Run' || !this.nearestMonster) return;
+        if (this.state.currentState === 'Run' || !this.nearestMonster || !this.state.isAlive) return;
         this.state.currentState = 'Attack';
 
         const heroAnimate = this.getState().HeroManage.HeroAnimate;

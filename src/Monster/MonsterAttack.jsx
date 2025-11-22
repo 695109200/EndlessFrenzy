@@ -33,7 +33,7 @@ class MonsterAttack {
     }
 
     startAttack() {
-        if (!this.autoAttack ) return
+        if (!this.autoAttack) return
         this.elapsed = 0;
         this.origin = this.monster.position.clone();
         this.target = this.heroManage.hero.position.clone();
@@ -53,8 +53,13 @@ class MonsterAttack {
     }
 
     attack() {
+        if (!this.getState().HeroManage.state.isAlive) {
+            this.monsterAI.currentState = 'Win'
+            return
+        }
         if (this.monsterAI.monsterType == 'normalMonster') {
-            this.monsterAI.animate.switchState("Attack")
+            this.monsterAI.currentState = 'Attack'
+
         } else {
             const { SkillManage } = this.getState()
             SkillManage.createBullet(

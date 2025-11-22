@@ -1,23 +1,28 @@
-import { updateMixer } from '../Utils/Utils';
-import { useGameStore, monsterDict } from '../Store/StoreManage';
 import * as THREE from 'three';
-class MonsterAnimate {
-    constructor(monsterAI) {
+import { useGameStore } from '../Store/StoreManage';
+import { updateMixer } from '../Utils/Utils';
+import { gsap } from 'gsap';
+
+class Animation {
+    constructor(mesh, animations, AnimationStates, state, defaultState) {
         this.setData = useGameStore.getState().setData;
         this.getState = useGameStore.getState;
-        this.monsterAI = monsterAI;
-        this.monster = monsterAI.monster;
-        this.animations = monsterAI.monsterAnimate;
-        this.mixer = new THREE.AnimationMixer(this.monster);
+        this.mesh = mesh;
+        this.animations = animations;
+        this.mixer = new THREE.AnimationMixer(this.mesh);
         this.actions = {};
-        this.AnimationStates = monsterDict[this.monster.monsterType].AnimationStates || {}
+        this.AnimationStates = AnimationStates
+        this.state = state
+        this.defaultState = defaultState
         this.lastState = null;
         this.fadeing = false;
+        this.playingDeathAnima = false
         this.init();
     }
 
     init() {
         this.setAnimate();
+        this.bindEvent()
         useGameStore.getState().addLoop((delta) => {
             this.update(delta);
         });
@@ -31,33 +36,44 @@ class MonsterAnimate {
                 return;
             }
             const action = this.mixer.clipAction(clip);
-            action.loop = THREE.LoopRepeat;
+            action.loop = isSingle ? THREE.LoopOnce : THREE.LoopRepeat;
             action.clampWhenFinished = isSingle;
             action.setEffectiveTimeScale(1);
             action.stop();
             this.actions[state] = action;
         });
-        this.actions.Run.play();
-        this.monsterAI.currentState = 'Run';
-        this.lastState = 'Run';
 
-        this.mixer.addEventListener('loop', (e) => {
-            // const finishedActionName = Object.keys(this.actions).find(key => this.actions[key] === e.action);
-            // if (finishedActionName == 'Attack') {
-            // }
-        });
-        this.switchState("Run");
+        this.actions.Idle.play();
+        this.state.currentState = this.defaultState;
+        this.lastState = this.defaultState;
     };
 
+    bindEvent() {
+        this.mixer.addEventListener('finished', (e) => {
+            const finishedActionName = Object.keys(this.actions).find(key => this.actions[key] === e.action);
+        });
+
+        this.mixer.addEventListener('loop', (e) => {
+            const finishedActionName = Object.keys(this.actions).find(key => this.actions[key] === e.action);
+            if (finishedActionName == 'Attack') {
+                const heroAttack = this.getState().HeroManage.HeroAttack;
+                if (heroAttack) {
+                    heroAttack.isAttacking = false;
+                }
+            }
+        });
+    }
+
     update = (delta) => {
+        this.switchState(this.state.currentState);
         updateMixer(this.mixer, delta);
     };
 
     switchState(targetState, fadeDuration = 0.2) {
-
         if (!this.AnimationStates[targetState]) {
-            targetState = 'Run';
+            targetState = 'Idle';
         }
+
         const currentState = this.lastState;
 
         if (currentState === targetState) {
@@ -70,8 +86,9 @@ class MonsterAnimate {
 
         let timeScale = 1;
         if (targetState === 'Attack') {
-            timeScale = this.monsterAI.attackSpeed;
+            timeScale = this.state.attackSpeed;
         }
+
         if (!this.AnimationStates[targetState].from.includes(currentState)) {
             if (oldAction) oldAction.stop();
             newAction?.reset().play();
@@ -92,14 +109,26 @@ class MonsterAnimate {
         this.lastState = targetState;
     }
 
+    heroDeathAnimate() {
+        if (this.playingDeathAnima) return;
+        this.playingDeathAnima = true;
+        const duration = 2.5;
+        gsap.to(this.mesh.position, {
+            y: this.mesh.position.y - 2,
+            duration,
+            ease: "power2.out",
+        });
+        setTimeout(() => {
+            this.mesh.visible = false
+        }, 1000)
+    }
+
     dispose() {
         const { removeLoop } = useGameStore.getState();
         if (this.updateFn && removeLoop) removeLoop(this.updateFn);
         this.updateFn = null;
-        this.lastState = null;
-        this.fadeing = false;
         this.mixer = null
     }
 }
 
-export default MonsterAnimate;
+export default Animation;

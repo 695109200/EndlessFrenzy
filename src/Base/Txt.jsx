@@ -61,7 +61,6 @@ class Txt {
 
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        console.log(this.color)
         context.fillStyle = this.color;
 
         context.fillText(text, logicWidth / 2, logicHeight / 2 + 2); // 调整 +2 略微修正基线

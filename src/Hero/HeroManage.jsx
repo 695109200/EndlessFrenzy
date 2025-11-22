@@ -1,12 +1,12 @@
 import { loadGLTFModel, createFixedCollisionBox } from '../Utils/Utils';
 import { useGameStore, useHeroModelDict } from '../Store/StoreManage';
 import HeroControl from './HeroControl'
-import HeroAnimate from './HeroAnimate'
 import HeroAttack from './HeroAttack'
 import HeroBasics from './HeroBasics';
 import HeroExperience from './HeroExperience';
 import HealthBar from '../Base/HealthBar'
 import Txt from '../Base/Txt'
+import Animation from '../Base/Animation'
 
 class HeroManage extends HeroBasics {
     constructor(scene, followGroup, camera, heroName) {
@@ -33,11 +33,31 @@ class HeroManage extends HeroBasics {
         this.id = THREE.MathUtils.generateUUID();
         this.INVULNERABILITY_DURATION = 1
         this.tag = 'hero';
+        this.AnimationStates = {
+            Idle: {
+                from: ['Run', 'Attack'],
+                clip: 'Idle1'
+            },
+            Run: {
+                from: ['Idle', 'Attack'],
+                clip: 'Run_Normal'
+            },
+            Attack: {
+                from: ['Idle', 'Run'],
+                clip: 'caitlyn_skin11_attackfast1.anm',
+                isSingle: false
+            },
+            Death: {
+                from: ['Attack', 'Idle', 'Run'],
+                clip: 'Death_Base',
+                isSingle: true
+            }
+        };
     }
 
     async init() {
         await this.initModel();
-        this.HeroAnimate = new HeroAnimate(this.hero, this.animations)
+        this.HeroAnimate = new Animation(this.hero, this.animations, this.AnimationStates, this.state, 'Idle')
         this.HeroControl = new HeroControl(this.hero)
         this.HeroAttack = new HeroAttack(this.hero)
         this.HeroExperience = new HeroExperience(this.hero, this.scene)
@@ -69,11 +89,13 @@ class HeroManage extends HeroBasics {
         if (otherObject.tag == 'monster') {
             this.state.health -= 1;
             this.txt.showTxt(1, 2.5, '#5d0707ff')
-            if (this.state.health <= 0) {
-                this.death()
-            }
+
             this.healthBar.updateHealth(this.state.health)
             this.startInvulnerability();
+        }
+
+        if (this.state.health <= 0) {
+            this.death()
         }
     }
 
@@ -82,6 +104,8 @@ class HeroManage extends HeroBasics {
         this.state.isAlive = false
         this.getState().MonsterManage.handelHeroDeath()
         this.HeroExperience.hiddenBar()
+        this.HeroAnimate.heroDeathAnimate()
+        this.collisionManager.unregister(this.id)
     }
 
     startInvulnerability() {
@@ -112,14 +136,6 @@ class HeroManage extends HeroBasics {
         this.hero.add(this.collisionBoxMesh);
         this.animations = gltf.animations
     };
-
-    addBuff() {
-
-    }
-
-    removeBuff() {
-
-    }
 
     addExperience(experience) {
         this.HeroExperience.updateExperience(experience)

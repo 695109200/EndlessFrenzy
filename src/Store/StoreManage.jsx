@@ -7,7 +7,7 @@ export const monsterDict = {
         stopDistance: 3,
         damage: 2,
         deathExperience: 2,
-        attackSpeed: 3.0,
+        attackSpeed: 1.0,
         attackAnimateTime: 0.2,  // 在攻击动画的什么时间开始触发攻击函数
         maxHealth: 10,
         AnimationStates: {
@@ -18,7 +18,7 @@ export const monsterDict = {
             Attack: {
                 from: ['Run'],
                 clip: 'Attack2',
-                isSingle: true
+                isSingle: false
             },
             Win: {
                 from: ['Attack', 'Run'],
@@ -51,7 +51,7 @@ export const monsterDict = {
             Attack: {
                 from: ['Run'],
                 clip: 'Attack2',
-                isSingle: true
+                isSingle: false
             },
             Win: {
                 from: ['Attack', 'Run'],

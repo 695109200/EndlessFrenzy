@@ -7,6 +7,7 @@ import MonsterAttack from './MonsterAttack'
 import ExperienceBall from '../Base/ExperienceBall'
 import HealthBar from '../Base/HealthBar'
 import Txt from '../Base/Txt'
+import Animation from '../Base/Animation'
 
 class MonsterAI {
     constructor(monster, animate, type) {
@@ -17,8 +18,11 @@ class MonsterAI {
         this.scene = this.getState().scene;
         this.monster = monster;
         this.monsterAnimate = animate
+        this.monsterType = type
 
         this.pixelRatio = window.devicePixelRatio || 1;
+
+        this.AnimationStates = monsterDict[this.monster.monsterType].AnimationStates || {}
         this.maxHealth = monsterDict[this.monster.monsterType].maxHealth || 5;
         this.deathExperience = monsterDict[this.monster.monsterType].deathExperience || 1;
         this.attackSpeed = monsterDict[this.monster.monsterType].attackSpeed || 1.0
@@ -29,7 +33,6 @@ class MonsterAI {
         this.id = THREE.MathUtils.generateUUID();
         this.tag = 'monster';
         this.currentState = 'Run'
-        this.monsterType = type
 
         this.animate = null
         this.control = null
@@ -49,7 +52,7 @@ class MonsterAI {
         };
         useGameStore.getState().addLoop(this.updateFn);
         this.initCollision()
-        this.animate = new MonsterAnimate(this)
+        this.animate = new Animation(this.monster, this.monsterAnimate, this.AnimationStates, this, 'Run')
         this.control = new MonsterControl(this)
         this.attack = new MonsterAttack(this)
         this.healthBar = new HealthBar(this.monster, this.maxHealth, 2.5)
@@ -87,7 +90,7 @@ class MonsterAI {
     death() {
         this.isAlive = false
         this.attack.stopAttackLoop()
-        this.animate.switchState("Death")
+        this.currentState = 'Death'
         this.collisionManager.unregister(this.id);
         new ExperienceBall(this.deathExperience, this.monster.position)
         setTimeout(() => {

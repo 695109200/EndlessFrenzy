@@ -127,7 +127,7 @@ class MonsterManage {
         this.monsterAIs.forEach(AI => {
             AI.stopUpdate = true
             AI.attack.stopAttackLoop()
-            AI.animate.switchState("Win")
+            AI.currentState = 'Win'
         })
     }
 

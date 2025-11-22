@@ -13,7 +13,13 @@ class HeroBuff extends HeroBasics {
 
     init() {
     }
+    addBuff() {
 
+    }
+
+    removeBuff() {
+
+    }
     dispose() {
 
     }

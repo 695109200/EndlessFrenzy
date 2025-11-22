@@ -4,8 +4,8 @@ class HeroBasics {
         isAlive: true,
         level: 0,   //等级
         health: 5,
-        damage: 1, //攻击力
-        attackSpeed: 8.0,//攻击速度
+        damage: 2, //攻击力
+        attackSpeed: 3.0,//攻击速度
         experience: 0, //当前经验
         experienceScope: 2, //吸附范围
         buff: [],

@@ -6,7 +6,6 @@ class HeroControl extends HeroBasics {
     constructor(model) {
         super();
         this.setData = useGameStore.getState().setData;
-        this.heroAnimate = useGameStore.getState().HeroManage.HeroAnimate;
         this.getState = useGameStore.getState;
         this.model = model;
         this.rotateSmoothness = 50.0;
